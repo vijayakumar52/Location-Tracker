@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Location Tracker</string>
+    <string name="ui_change_interval">Change Interval</string>
+    <string name="toast_permission_granted">Permission granted!</string>
+    <string name="toast_permission_denied">You nigga! How can I get data without permission?</string>
+    <string name="toast_service_already_enabled">Service already enabled.</string>
+    <string name="toast_service_already_disabled">Service already disabled.</string>
+    <string name="toast_alarm_set_for_interval">Alarm set for the interval :</string>
+</resources>

@@ -1,0 +1,93 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+buildscript {
+    repositories {
+        jcenter()
+        maven {
+            url "http://build.csez.zohocorpin.com/zoho_android/janalytics/milestones"
+        }
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:2.3.0'
+        classpath 'com.google.gms:google-services:3.1.0'
+        classpath 'com.zoho:janalytics-plugin:JANALYTICS_PLUGIN_V2'
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+
+    ext {
+        supportLibVer = "26.1.0"
+        smoothProgressBarVer = "1.1.0"
+        tokenAutoCompleteVer = "2.0.8@aar"
+        textDrawableVer = "1.0.1"
+        firebaseMessagingVer = "10.2.6"
+        butterKnifeVer = "8.5.1"
+        jAnalyticsVer = "JANALYTICS_V2"
+        ssoVer = "ACCOUNTS_ANDROID_SSOFRAMEWORK_V2_16"
+        browniesCollectionsVer = "0.9.12"
+        materialDialogVer = "0.9.4.5"
+        permissoVer = "0.3.0"
+        colorPickerVer = "0.0.4"
+        smallBangVer = "0.1.2"
+        okhttpVer = "3.8.1"
+        prettyTimeVer = "4.0.1.Final"
+        apacheCollectionsVer = "4.0"
+        wmsVer = "ANDROID_WMS_API_V1"
+        picassoVer = "2.5.2"
+        picassoDownloaderVer = "1.1.0"
+        architectureComponentVer = "1.0.0"
+
+
+        compileSdkVersion = 26
+        minSdkVersion = 16
+        targetSdkVersion = 26
+        buildToolsVersion = "26.0.2"
+
+        supportLib = [
+                appcompat : "com.android.support:appcompat-v7:${supportLibVer}",
+                design    : "com.android.support:design:${supportLibVer}",
+                annotation: "com.android.support:support-annotations:${supportLibVer}"
+        ]
+
+        architechLib = [
+                lifecycleExtn : "android.arch.lifecycle:extensions:${architectureComponentVer}",
+                lifecycleRuntime : "android.arch.lifecycle:runtime:${architectureComponentVer}",
+                lifecycleCompiler : "android.arch.lifecycle:compiler:${architectureComponentVer}"
+        ]
+
+        extLib = [
+                smoothProgressBar  : "com.github.castorflex.smoothprogressbar:library:${smoothProgressBarVer}",
+                tokenAutoComplete  : "com.splitwise:tokenautocomplete:${tokenAutoCompleteVer}",
+                textDrawable       : "com.amulyakhare:com.amulyakhare.textdrawable:${textDrawableVer}",
+                firebaseMessaging  : "com.google.firebase:firebase-messaging:${firebaseMessagingVer}",
+                sso                : "accounts_android_ssoframework.milestones:test:${ssoVer}",
+                butterknife        : "com.jakewharton:butterknife:${butterKnifeVer}",
+                butterKnifeCompiler: "com.jakewharton:butterknife-compiler:${butterKnifeVer}",
+                browniesCollections: "org.magicwerk:brownies-collections:${browniesCollectionsVer}",
+                materialDialog     : "com.afollestad.material-dialogs:core:${materialDialogVer}",
+                permisso           : "com.greysonparrelli.permiso:permiso:${permissoVer}",
+                colorPicker        : "org.xdty.preference:color-picker:${colorPickerVer}",
+                smallBang          : "hanks.xyz:smallbang-library:${smallBangVer}",
+                okhttp             : "com.squareup.okhttp3:okhttp:${okhttpVer}",
+                prettyTime         : "org.ocpsoft.prettytime:prettytime:${prettyTimeVer}",
+                apacheCollections  : "org.apache.commons:commons-collections4:${apacheCollectionsVer}",
+                wms                : "android_wms_api.milestones:master:${wmsVer}",
+                jAnalytics         : "com.zoho:janalyticsv2:${jAnalyticsVer}",
+                picasso            : "com.squareup.picasso:picasso:${picassoVer}",
+                picassoDownloader  : "com.jakewharton.picasso:picasso2-okhttp3-downloader:${picassoDownloaderVer}",
+        ]
+    }
+}
+
+allprojects {
+    repositories {
+        jcenter()
+        maven {
+            url "http://build.csez.zohocorpin.com/zoho_android"
+        }
+        maven {
+            url "http://build.csez.zohocorpin.com/zoho_android/janalytics/milestones"
+        }
+        maven { url 'https://maven.google.com' }
+    }
+}
