@@ -59,6 +59,7 @@ public class SendGeoDataService extends Service implements LocationListener {
         Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
         sendData(location);
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
+        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
     }
 
     @Override
