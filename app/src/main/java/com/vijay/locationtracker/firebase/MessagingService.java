@@ -20,7 +20,7 @@ public class MessagingService extends FirebaseMessagingService {
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
         super.onMessageReceived(remoteMessage);
-        Log.d(TAG, "Message received from "+ remoteMessage.getFrom());
+        Log.d(TAG, "Message received from " + remoteMessage.getFrom());
         // Not getting messages here? See why this may be: https://goo.gl/39bRNJ
         // Check if message contains a data payload.
         if (remoteMessage.getData().size() > 0) {
@@ -35,20 +35,15 @@ public class MessagingService extends FirebaseMessagingService {
     }
 
     private void handleNow(Map<String, String> message) {
-        String enableTracking = message.get("tracking");
+        String tracking = message.get("tracking");
         String interval = message.get("interval");
 
-        Log.d(TAG, "Message Details "+ "enableTracking :"+ enableTracking + " Interval : "+ interval);
+        Log.d(TAG, "Message Details " + "enableTracking :" + tracking + " Interval : " + interval);
         Intent intent = new Intent(this, TrackingService.class);
 
-        if (enableTracking != null) {
-            boolean enable = "true".equals(enableTracking);
-            intent.putExtra(TrackingService.EXTRA_TRACKING_STATUS, enable);
-        }
+        intent.putExtra(TrackingService.EXTRA_TRACKING_STATUS, tracking);
+        intent.putExtra(TrackingService.EXTRA_ALARM_INTERVAL, interval);
 
-        if (interval != null) {
-            intent.putExtra(TrackingService.EXTRA_ALARM_INTERVAL, interval);
-        }
         startService(intent);
         Log.d(TAG, "Tracking service started with above details");
     }

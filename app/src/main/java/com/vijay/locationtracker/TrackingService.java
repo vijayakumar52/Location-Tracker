@@ -55,7 +55,7 @@ public class TrackingService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Logger.d(TAG, "onStartCommand called");
         if (intent != null) {
-            boolean trackingStatus = intent.getBooleanExtra(EXTRA_TRACKING_STATUS, false);
+            String trackingStatus = intent.getStringExtra(EXTRA_TRACKING_STATUS);
             String alarmInterval = intent.getStringExtra(EXTRA_ALARM_INTERVAL);
 
             if (alarmInterval != null) {
@@ -63,12 +63,16 @@ public class TrackingService extends Service {
                 Logger.d(TAG, "Updating interval time : " + newInterval);
                 PrefUtils.setPrefValueLong(this, ALARM_INTERVAL_KEY, newInterval);
             }
-            if (trackingStatus) {
-                enableTracking();
-            } else {
-                disableTracking(this);
+            if (trackingStatus != null) {
+                boolean status = Boolean.parseBoolean(trackingStatus);
+                if (status) {
+                    enableTracking();
+                } else {
+                    disableTracking(this);
+                }
             }
         }
+        stopSelf();
         return super.onStartCommand(intent, flags, startId);
     }
 
