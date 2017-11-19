@@ -14,16 +14,20 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import com.google.firebase.database.ValueEventListener;
 import com.vijay.locationtracker.firebase.Constants;
 
 
-public class SendGeoDataService extends Service implements LocationListener {
+public class SendGeoDataService extends Service implements LocationListener, ValueEventListener {
     private final String COUNTER = "counter";
 
     LocationManager locationManager;
+    DatabaseReference trackingStatus;
     private static final String TAG = SendGeoDataService.class.getSimpleName();
 
     @Nullable
@@ -34,14 +38,39 @@ public class SendGeoDataService extends Service implements LocationListener {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Logger.d(TAG, "Location service started");
+        Logger.d(TAG, "onStartCommand called");
         sendCoordinates();
+        checkTrackingStatus();
         return super.onStartCommand(intent, flags, startId);
+    }
+
+    private void checkTrackingStatus() {
+        trackingStatus = FirebaseDatabase.getInstance().getReference(Constants.TRACKING_STATUS);
+        trackingStatus.addValueEventListener(this);
+        Logger.d(TAG, "trackingStatus listener registered");
+    }
+
+    @Override
+    public void onDataChange(DataSnapshot dataSnapshot) {
+        Boolean status = dataSnapshot.getValue(Boolean.class);
+        Logger.d(TAG, "onDataChange called : tracking = "+ status);
+        if (status != null && status) {
+            //Do nothing
+        } else {
+            TrackingService.disableTracking(SendGeoDataService.this);
+        }
+
+    }
+
+    @Override
+    public void onCancelled(DatabaseError databaseError) {
+
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
+        Logger.d(TAG, "onCreate called");
     }
 
     private void sendCoordinates() {
@@ -60,12 +89,13 @@ public class SendGeoDataService extends Service implements LocationListener {
         sendData(location);
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
         locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
+        Log.d(TAG, "location listener registered");
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.d(TAG, "ALARM SERVICE STOPPED");
+        Log.d(TAG, "Service stopped");
     }
 
     @Override
@@ -73,6 +103,10 @@ public class SendGeoDataService extends Service implements LocationListener {
         Log.d(TAG, "OnLocationChanged called");
         sendData(location);
         locationManager.removeUpdates(this);
+        Log.d(TAG, "location change listener removed");
+        trackingStatus.removeEventListener(this);
+        Log.d(TAG, "tracking Status listener removed");
+        stopSelf();
     }
 
     private void sendData(Location location) {

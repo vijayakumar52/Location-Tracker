@@ -30,5 +30,7 @@ public class InstanceIdService extends FirebaseInstanceIdService {
     private void sendRegistrationToServer(String refreshedToken) {
         DatabaseReference coordinatesInstance = FirebaseDatabase.getInstance().getReference(Constants.DEVICE_TOKEN);
         coordinatesInstance.setValue(refreshedToken);
+        Log.d(TAG, "Refreshed token updated in server database");
+
     }
 }

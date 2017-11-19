@@ -25,8 +25,8 @@ import com.vijay.locationtracker.firebase.Constants;
 
 public class TrackingService extends Service {
 
-    private final String TAG = TrackingService.class.getSimpleName();
-    public final int PENDING_INTENT_CODE = 5257;
+    private final static String TAG = TrackingService.class.getSimpleName();
+    public static final int PENDING_INTENT_CODE = 5257;
     public static final String ALARM_KEY = "alarmSet";
     public static final String ALARM_INTERVAL_KEY = "alarmInterval";
     public static final long DEFAULT_INTERVAL = 60 * 1000;
@@ -47,11 +47,13 @@ public class TrackingService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        Logger.d(TAG, "onCreate called");
     }
 
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Logger.d(TAG, "onStartCommand called");
         if (intent != null) {
             boolean trackingStatus = intent.getBooleanExtra(EXTRA_TRACKING_STATUS, false);
             String alarmInterval = intent.getStringExtra(EXTRA_ALARM_INTERVAL);
@@ -64,7 +66,7 @@ public class TrackingService extends Service {
             if (trackingStatus) {
                 enableTracking();
             } else {
-                disableTracking();
+                disableTracking(this);
             }
         }
         return super.onStartCommand(intent, flags, startId);
@@ -110,24 +112,25 @@ public class TrackingService extends Service {
                 (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
         notificationManager.notify(0, n);
+        Logger.d(TAG, "Notification shown regarding permission");
     }
 
-    public void disableTracking() {
-        if (isTrackingEnabled(this)) {
+    public static void disableTracking(Context context) {
+        if (isTrackingEnabled(context)) {
 
-            AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
-            alarmManager.cancel(getAlarmPendingIntent());
+            AlarmManager alarmManager = (AlarmManager) context.getSystemService(ALARM_SERVICE);
+            alarmManager.cancel(getAlarmPendingIntent(context));
 
-            PrefUtils.setPrefValueBoolean(this, ALARM_KEY, false);
+            PrefUtils.setPrefValueBoolean(context, ALARM_KEY, false);
 
             //Set DB value in cloud
             FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
             DatabaseReference trackingStatus = firebaseDatabase.getReference(Constants.TRACKING_STATUS);
             trackingStatus.setValue(false);
 
-            Log.d(TAG, "ALARM CANCELLED");
+            Log.d(TAG, "Tracking disabled");
         } else {
-            ToastUtils.showToast(this, getResources().getString(R.string.toast_service_already_disabled));
+            ToastUtils.showToast(context, context.getResources().getString(R.string.toast_service_already_disabled));
         }
     }
 
@@ -149,7 +152,7 @@ public class TrackingService extends Service {
         }
 
         AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
-        alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP, DEFAULT_START_INTERVAL, interval, getAlarmPendingIntent());
+        alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP, DEFAULT_START_INTERVAL, interval, getAlarmPendingIntent(this));
 
         PrefUtils.setPrefValueBoolean(this, ALARM_KEY, true);
 
@@ -158,16 +161,16 @@ public class TrackingService extends Service {
         trackingStatus.setValue(true);
 
         ToastUtils.showToast(this, getResources().getString(R.string.toast_alarm_set_for_interval) + interval);
-        Log.d(TAG, "ALARM SCHEDULED");
+        Log.d(TAG, "Tracking Enabled");
     }
 
-    private Intent getAlarmIntent() {
-        return new Intent(TrackingService.this, SendGeoDataService.class);
+    private static Intent getAlarmIntent(Context context) {
+        return new Intent(context, SendGeoDataService.class);
     }
 
-    private PendingIntent getAlarmPendingIntent() {
-        Intent serviceIntent = getAlarmIntent();
-        return PendingIntent.getService(TrackingService.this, PENDING_INTENT_CODE, serviceIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+    private static PendingIntent getAlarmPendingIntent(Context context) {
+        Intent serviceIntent = getAlarmIntent(context);
+        return PendingIntent.getService(context, PENDING_INTENT_CODE, serviceIntent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
     public static boolean isTrackingEnabled(Context context) {

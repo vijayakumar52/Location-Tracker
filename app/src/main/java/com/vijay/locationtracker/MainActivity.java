@@ -15,13 +15,15 @@ import com.greysonparrelli.permiso.Permiso;
 
 import com.vijay.locationtracker.firebase.Constants;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements ValueEventListener{
     private static final String TAG = MainActivity.class.getSimpleName();
     public static final String REQUEST_PERMISSION = "requestPermission";
+    DatabaseReference trackingStatus;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Logger.d(TAG, "onCreate called");
         Permiso.getInstance().setActivity(this);
 
         boolean requestPermission = getIntent().getBooleanExtra(REQUEST_PERMISSION, false);
@@ -31,26 +33,27 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
-        DatabaseReference trackingStatus = firebaseDatabase.getReference(Constants.TRACKING_STATUS);
-        trackingStatus.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                Boolean value = dataSnapshot.getValue(Boolean.class);
-                ImageView status = findViewById(R.id.service_status);
-                if (value != null && value) {
-                    status.setImageResource(R.drawable.active);
-                } else {
-                    status.setImageResource(R.drawable.inactive);
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
+        trackingStatus = firebaseDatabase.getReference(Constants.TRACKING_STATUS);
+        trackingStatus.addValueEventListener(this);
+        Logger.d(TAG, "tracking status listener registered");
     }
 
+    @Override
+    public void onDataChange(DataSnapshot dataSnapshot) {
+        Boolean value = dataSnapshot.getValue(Boolean.class);
+        Logger.d(TAG, "onDataChange called : tracking = "+ value);
+        ImageView status = findViewById(R.id.service_status);
+        if (value != null && value) {
+            status.setImageResource(R.drawable.active);
+        } else {
+            status.setImageResource(R.drawable.inactive);
+        }
+    }
+
+    @Override
+    public void onCancelled(DatabaseError databaseError) {
+
+    }
 
     private void requestPermission(String... permissions) {
         Permiso.getInstance().requestPermissions(new Permiso.IOnPermissionResult() {
@@ -78,6 +81,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        Logger.d(TAG, "onResume called");
         Permiso.getInstance().setActivity(this);
     }
 
@@ -85,5 +89,13 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         Permiso.getInstance().onRequestPermissionResult(requestCode, permissions, grantResults);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        trackingStatus.removeEventListener(this);
+        Logger.d(TAG, "tracking status listener removed");
+        Logger.d(TAG, "onDestroy called");
     }
 }
