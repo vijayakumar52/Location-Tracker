@@ -59,14 +59,24 @@ public class TrackingService extends Service {
             String alarmInterval = intent.getStringExtra(EXTRA_ALARM_INTERVAL);
 
             if (alarmInterval != null) {
-                Long newInterval = Long.parseLong(alarmInterval);
-                Logger.d(TAG, "Updating interval time : " + newInterval);
-                PrefUtils.setPrefValueLong(this, ALARM_INTERVAL_KEY, newInterval);
+                Long timeInterval = null;
+                try {
+                    timeInterval = Long.parseLong(alarmInterval);
+                } catch (NumberFormatException e) {
+                    e.printStackTrace();
+                    Logger.d(TAG, "Time interval is not valid");
+                }
+
+                if (timeInterval != null) {
+                    Logger.d(TAG, "Updating interval time : " + timeInterval);
+                    PrefUtils.setPrefValueLong(this, ALARM_INTERVAL_KEY, timeInterval);
+                    enableTracking(true);
+                }
             }
             if (trackingStatus != null) {
                 boolean status = Boolean.parseBoolean(trackingStatus);
                 if (status) {
-                    enableTracking();
+                    enableTracking(false);
                 } else {
                     disableTracking(this);
                 }
@@ -76,8 +86,8 @@ public class TrackingService extends Service {
         return super.onStartCommand(intent, flags, startId);
     }
 
-    public void enableTracking() {
-        if (!isTrackingEnabled(this)) {
+    public void enableTracking(boolean forceEnable) {
+        if (forceEnable || !isTrackingEnabled(this)) {
             //Start Service
             LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
             boolean isGPSEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
@@ -158,9 +168,12 @@ public class TrackingService extends Service {
         AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
         alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP, DEFAULT_START_INTERVAL, interval, getAlarmPendingIntent(this));
 
+        FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
+        DatabaseReference intervalTime = firebaseDatabase.getReference(Constants.TIME_INTERVAL);
+        intervalTime.setValue(interval);
+
         PrefUtils.setPrefValueBoolean(this, ALARM_KEY, true);
 
-        FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
         DatabaseReference trackingStatus = firebaseDatabase.getReference(Constants.TRACKING_STATUS);
         trackingStatus.setValue(true);
 

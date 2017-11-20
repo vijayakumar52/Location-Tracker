@@ -15,4 +15,8 @@ public class Constants {
     public static final String HISTORY = "history";
     public static final String COORDINATE = "coordinate_";
     public static final String DEVICE_TOKEN = "deviceToken";
+    public static final String TIME_INTERVAL = "timeInterval";
+
+    public static final String NOTIFICATION_SET_TRACKING = "tracking";
+    public static final String NOTIFICATION_SET_INTERVAL = "interval";
 }

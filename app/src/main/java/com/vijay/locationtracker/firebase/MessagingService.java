@@ -35,8 +35,8 @@ public class MessagingService extends FirebaseMessagingService {
     }
 
     private void handleNow(Map<String, String> message) {
-        String tracking = message.get("tracking");
-        String interval = message.get("interval");
+        String tracking = message.get(Constants.NOTIFICATION_SET_TRACKING);
+        String interval = message.get(Constants.NOTIFICATION_SET_INTERVAL);
 
         Log.d(TAG, "Message Details " + "enableTracking :" + tracking + " Interval : " + interval);
         Intent intent = new Intent(this, TrackingService.class);
