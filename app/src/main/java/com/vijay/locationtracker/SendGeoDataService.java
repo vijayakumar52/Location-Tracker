@@ -130,7 +130,7 @@ public class SendGeoDataService extends Service implements LocationListener, Val
             }
 
             DatabaseReference coordinates = FirebaseDatabase.getInstance().getReference(Constants.HISTORY);
-            coordinates = coordinates.child(Constants.COORDINATE + value);
+            coordinates = coordinates.child(value + Constants.COORDINATE);
             DatabaseReference latReference = coordinates.child(Constants.LATITUDE);
             DatabaseReference lonReference = coordinates.child(Constants.LONGITUDE);
             DatabaseReference timeReference = coordinates.child(Constants.TIME);
@@ -138,7 +138,7 @@ public class SendGeoDataService extends Service implements LocationListener, Val
             lonReference.setValue(curLongitude);
             timeReference.setValue(time);
 
-            if (value >= 99) {
+            if (value >= Constants.MAX_COUNT) {
                 value = -1;
             }
 
