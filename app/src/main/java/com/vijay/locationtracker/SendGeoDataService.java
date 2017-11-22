@@ -14,6 +14,9 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -53,7 +56,7 @@ public class SendGeoDataService extends Service implements LocationListener, Val
     @Override
     public void onDataChange(DataSnapshot dataSnapshot) {
         Boolean status = dataSnapshot.getValue(Boolean.class);
-        Logger.d(TAG, "onDataChange called : tracking = "+ status);
+        Logger.d(TAG, "onDataChange called : tracking = " + status);
         if (status != null && status) {
             //Do nothing
         } else {
@@ -87,9 +90,18 @@ public class SendGeoDataService extends Service implements LocationListener, Val
         }
         Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
         sendData(location);
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
-        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
+        //locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
+        //locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
         Log.d(TAG, "location listener registered");
+
+        FusedLocationProviderClient mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        mFusedLocationClient.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
+            @Override
+            public void onSuccess(Location location) {
+                sendData(location);
+            }
+        });
+
     }
 
     @Override
@@ -110,19 +122,11 @@ public class SendGeoDataService extends Service implements LocationListener, Val
     }
 
     private void sendData(Location location) {
+        Logger.d(TAG, "Sending location");
         if (location != null) {
             double curLatitude = location.getLatitude();
             double curLongitude = location.getLongitude();
             long time = location.getTime();
-
-            DatabaseReference recentCoordinate = FirebaseDatabase.getInstance().getReference(Constants.LAST_LOCATION);
-            DatabaseReference lat = recentCoordinate.child(Constants.LATITUDE);
-            DatabaseReference lon = recentCoordinate.child(Constants.LONGITUDE);
-            DatabaseReference tim = recentCoordinate.child(Constants.TIME);
-
-            lat.setValue(curLatitude);
-            lon.setValue(curLongitude);
-            tim.setValue(time);
 
             int value = PrefUtils.getPrefValueInt(this, COUNTER);
             if (value == -1) {
@@ -131,20 +135,22 @@ public class SendGeoDataService extends Service implements LocationListener, Val
 
             DatabaseReference coordinates = FirebaseDatabase.getInstance().getReference(Constants.HISTORY);
             coordinates = coordinates.child(value + Constants.COORDINATE);
-            DatabaseReference latReference = coordinates.child(Constants.LATITUDE);
-            DatabaseReference lonReference = coordinates.child(Constants.LONGITUDE);
-            DatabaseReference timeReference = coordinates.child(Constants.TIME);
-            latReference.setValue(curLatitude);
-            lonReference.setValue(curLongitude);
-            timeReference.setValue(time);
 
+            LocationData data = new LocationData(curLatitude, curLongitude, time);
+            coordinates.setValue(data, new DatabaseReference.CompletionListener() {
+                @Override
+                public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
+                    Logger.d(TAG, "Location updated.");
+                }
+            });
             if (value >= Constants.MAX_COUNT) {
                 value = -1;
             }
 
             PrefUtils.setPrefValueInt(this, COUNTER, value + 1);
 
-            Logger.d(TAG, "Location updated.");
+        } else {
+            Logger.d(TAG, "Location null");
         }
     }
 
