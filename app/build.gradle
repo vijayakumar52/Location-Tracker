@@ -33,7 +33,7 @@ dependencies {
     compile getRootProject().ext.extLib.permisso
     compile getRootProject().ext.extLib.okhttp
     compile getRootProject().ext.extLib.materialDialog
-
+    compile project(':Android-Utils')
     compile 'com.google.android.gms:play-services-location:11.6.0'
 
 }
