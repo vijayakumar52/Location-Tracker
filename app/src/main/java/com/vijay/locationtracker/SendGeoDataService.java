@@ -26,7 +26,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.vijay.locationtracker.firebase.Constants;
 
 
-public class SendGeoDataService extends Service implements LocationListener, ValueEventListener {
+public class SendGeoDataService extends Service implements ValueEventListener {
     private final String COUNTER = "counter";
 
     LocationManager locationManager;
@@ -36,13 +36,13 @@ public class SendGeoDataService extends Service implements LocationListener, Val
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
+        Logger.d(TAG, "onBind called");
         return null;
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Logger.d(TAG, "onStartCommand called");
-        sendCoordinates();
         checkTrackingStatus();
         return super.onStartCommand(intent, flags, startId);
     }
@@ -58,11 +58,11 @@ public class SendGeoDataService extends Service implements LocationListener, Val
         Boolean status = dataSnapshot.getValue(Boolean.class);
         Logger.d(TAG, "onDataChange called : tracking = " + status);
         if (status != null && status) {
-            //Do nothing
+            sendCoordinates();
         } else {
             TrackingService.disableTracking(SendGeoDataService.this);
+            stopSelf();
         }
-
     }
 
     @Override
@@ -88,17 +88,13 @@ public class SendGeoDataService extends Service implements LocationListener, Val
             // for ActivityCompat#requestPermissions for more details.
             return;
         }
-        Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        sendData(location);
-        //locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
-        //locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
-        Log.d(TAG, "location listener registered");
 
         FusedLocationProviderClient mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         mFusedLocationClient.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
             @Override
             public void onSuccess(Location location) {
                 sendData(location);
+                stopSelf();
             }
         });
 
@@ -108,17 +104,6 @@ public class SendGeoDataService extends Service implements LocationListener, Val
     public void onDestroy() {
         super.onDestroy();
         Log.d(TAG, "Service stopped");
-    }
-
-    @Override
-    public void onLocationChanged(Location location) {
-        Log.d(TAG, "OnLocationChanged called");
-        sendData(location);
-        locationManager.removeUpdates(this);
-        Log.d(TAG, "location change listener removed");
-        trackingStatus.removeEventListener(this);
-        Log.d(TAG, "tracking Status listener removed");
-        stopSelf();
     }
 
     private void sendData(Location location) {
@@ -152,20 +137,5 @@ public class SendGeoDataService extends Service implements LocationListener, Val
         } else {
             Logger.d(TAG, "Location null");
         }
-    }
-
-    @Override
-    public void onStatusChanged(String provider, int status, Bundle extras) {
-
-    }
-
-    @Override
-    public void onProviderEnabled(String provider) {
-
-    }
-
-    @Override
-    public void onProviderDisabled(String provider) {
-
     }
 }

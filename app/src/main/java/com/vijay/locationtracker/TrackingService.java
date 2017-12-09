@@ -41,6 +41,7 @@ public class TrackingService extends Service {
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
+        Logger.d(TAG, "onBind called");
         return null;
     }
 
@@ -87,26 +88,26 @@ public class TrackingService extends Service {
     }
 
     public void enableTracking(boolean forceEnable) {
-        if (forceEnable || !isTrackingEnabled(this)) {
-            //Start Service
-            LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-            boolean isGPSEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-            if (!isGPSEnabled) {
-                Logger.d(TAG, "GPS is not enabled. Opening settings screen now.");
-                Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                startActivity(intent);
-            } else {
-                if (hasPermission()) {
-                    scheduleAlarm();
-                } else {
-                    Logger.d(TAG, "Permission not acquired. throwing notification now.");
-                    throwNotification();
-                }
-            }
+        // if (forceEnable || !isTrackingEnabled(this)) {
+        //Start Service
+        LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        boolean isGPSEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        if (!isGPSEnabled) {
+            Logger.d(TAG, "GPS is not enabled. Opening settings screen now.");
+            Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+            startActivity(intent);
         } else {
+            if (hasPermission()) {
+                scheduleAlarm();
+            } else {
+                Logger.d(TAG, "Permission not acquired. throwing notification now.");
+                throwNotification();
+            }
+        }
+       /* } else {
             Logger.d(TAG, "Tracking service already enabled");
             ToastUtils.showToast(this, getResources().getString(R.string.toast_service_already_enabled));
-        }
+        }*/
     }
 
     private void throwNotification() {
@@ -130,22 +131,22 @@ public class TrackingService extends Service {
     }
 
     public static void disableTracking(Context context) {
-        if (isTrackingEnabled(context)) {
+        //if (isTrackingEnabled(context)) {
 
-            AlarmManager alarmManager = (AlarmManager) context.getSystemService(ALARM_SERVICE);
-            alarmManager.cancel(getAlarmPendingIntent(context));
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(ALARM_SERVICE);
+        alarmManager.cancel(getAlarmPendingIntent(context));
 
-            PrefUtils.setPrefValueBoolean(context, ALARM_KEY, false);
+        PrefUtils.setPrefValueBoolean(context, ALARM_KEY, false);
 
-            //Set DB value in cloud
-            FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
-            DatabaseReference trackingStatus = firebaseDatabase.getReference(Constants.TRACKING_STATUS);
-            trackingStatus.setValue(false);
+        //Set DB value in cloud
+        FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
+        DatabaseReference trackingStatus = firebaseDatabase.getReference(Constants.TRACKING_STATUS);
+        trackingStatus.setValue(false);
 
-            Log.d(TAG, "Tracking disabled");
-        } else {
+        Log.d(TAG, "Tracking disabled");
+        /*} else {
             ToastUtils.showToast(context, context.getResources().getString(R.string.toast_service_already_disabled));
-        }
+        }*/
     }
 
     public boolean hasPermission() {
@@ -192,5 +193,11 @@ public class TrackingService extends Service {
 
     public static boolean isTrackingEnabled(Context context) {
         return PrefUtils.getPrefValueBoolean(context, ALARM_KEY);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Logger.d(TAG, "onBind called");
     }
 }
