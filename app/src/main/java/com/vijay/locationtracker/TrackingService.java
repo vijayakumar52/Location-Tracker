@@ -17,6 +17,9 @@ import android.util.Log;
 
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.vijay.androidutils.Logger;
+import com.vijay.androidutils.PrefUtils;
+import com.vijay.androidutils.ToastUtils;
 import com.vijay.locationtracker.firebase.Constants;
 
 /**
@@ -95,6 +98,10 @@ public class TrackingService extends Service {
         if (!isGPSEnabled) {
             Logger.d(TAG, "GPS is not enabled. Opening settings screen now.");
             Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+            //Caused by: android.util.AndroidRuntimeException: Calling startActivity()
+            // from outside of an Activity  context requires the FLAG_ACTIVITY_NEW_TASK flag. Is this really what you want?
+
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
         } else {
             if (hasPermission()) {
@@ -178,7 +185,7 @@ public class TrackingService extends Service {
         DatabaseReference trackingStatus = firebaseDatabase.getReference(Constants.TRACKING_STATUS);
         trackingStatus.setValue(true);
 
-        ToastUtils.showToast(this, getResources().getString(R.string.toast_alarm_set_for_interval) + interval);
+        ToastUtils.makeToastLong(this, getResources().getString(R.string.toast_alarm_set_for_interval) + interval);
         Log.d(TAG, "Tracking Enabled");
     }
 

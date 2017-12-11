@@ -13,6 +13,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.greysonparrelli.permiso.Permiso;
 
+import com.vijay.androidutils.Logger;
+import com.vijay.androidutils.ToastUtils;
 import com.vijay.locationtracker.firebase.Constants;
 
 public class MainActivity extends AppCompatActivity implements ValueEventListener{
@@ -60,14 +62,14 @@ public class MainActivity extends AppCompatActivity implements ValueEventListene
             @Override
             public void onPermissionResult(Permiso.ResultSet resultSet) {
                 if (resultSet.areAllPermissionsGranted()) {
-                    ToastUtils.showToast(MainActivity.this, getResources().getString(R.string.toast_permission_granted));
+                    ToastUtils.makeToastLong(MainActivity.this, getResources().getString(R.string.toast_permission_granted));
 
                     Intent intent = new Intent(MainActivity.this, TrackingService.class);
                     intent.putExtra(TrackingService.EXTRA_TRACKING_STATUS, true);
                     startService(intent);
 
                 } else {
-                    ToastUtils.showToast(MainActivity.this, getResources().getString(R.string.toast_permission_denied));
+                    ToastUtils.makeToastLong(MainActivity.this, getResources().getString(R.string.toast_permission_denied));
                 }
             }
 
