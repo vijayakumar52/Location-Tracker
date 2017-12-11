@@ -29,8 +29,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.vijay.androidutils.Logger;
 import com.vijay.androidutils.PrefUtils;
 import com.vijay.locationtracker.firebase.Constants;
-
-import java.util.Locale;
+import com.vijay.locationtracker.firebase.MessagingService;
 
 
 public class SendGeoDataService extends Service implements ValueEventListener {
@@ -67,7 +66,7 @@ public class SendGeoDataService extends Service implements ValueEventListener {
         if (status != null && status) {
             sendCoordinates();
         } else {
-            TrackingService.disableTracking(SendGeoDataService.this);
+            MessagingService.disableTracking(SendGeoDataService.this);
             stopSelf();
         }
     }

@@ -16,6 +16,7 @@ import com.greysonparrelli.permiso.Permiso;
 import com.vijay.androidutils.Logger;
 import com.vijay.androidutils.ToastUtils;
 import com.vijay.locationtracker.firebase.Constants;
+import com.vijay.locationtracker.firebase.MessagingService;
 
 public class MainActivity extends AppCompatActivity implements ValueEventListener{
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -30,7 +31,7 @@ public class MainActivity extends AppCompatActivity implements ValueEventListene
 
         boolean requestPermission = getIntent().getBooleanExtra(REQUEST_PERMISSION, false);
         if (requestPermission) {
-            requestPermission(TrackingService.permissions);
+            requestPermission(MessagingService.permissions);
         }
         setContentView(R.layout.activity_main);
 
@@ -64,9 +65,7 @@ public class MainActivity extends AppCompatActivity implements ValueEventListene
                 if (resultSet.areAllPermissionsGranted()) {
                     ToastUtils.makeToastLong(MainActivity.this, getResources().getString(R.string.toast_permission_granted));
 
-                    Intent intent = new Intent(MainActivity.this, TrackingService.class);
-                    intent.putExtra(TrackingService.EXTRA_TRACKING_STATUS, true);
-                    startService(intent);
+                    MessagingService.enableTracking(MainActivity.this, false);
 
                 } else {
                     ToastUtils.makeToastLong(MainActivity.this, getResources().getString(R.string.toast_permission_denied));

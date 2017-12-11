@@ -38,7 +38,6 @@
             </intent-filter>
         </service>
 
-        <service android:name=".TrackingService" />
     </application>
 
 </manifest>
