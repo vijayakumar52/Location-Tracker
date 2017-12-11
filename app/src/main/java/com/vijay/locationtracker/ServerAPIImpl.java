@@ -4,6 +4,8 @@ package com.vijay.locationtracker;
 
 import android.util.Log;
 
+import com.vijay.androidutils.AsyncTaskListener;
+
 public class ServerAPIImpl implements ServerAPI {
     private static final String TAG = ServerAPIImpl.class.getSimpleName();
     private static ServerAPIImpl serverAPI = new ServerAPIImpl();
