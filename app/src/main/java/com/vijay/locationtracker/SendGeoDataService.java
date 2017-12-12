@@ -2,18 +2,12 @@
 package com.vijay.locationtracker;
 
 import android.Manifest;
-import android.app.Service;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
-import android.location.LocationListener;
 import android.location.LocationManager;
-import android.os.Bundle;
-import android.os.IBinder;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
-import android.util.Log;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -24,67 +18,57 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-
 import com.google.firebase.database.ValueEventListener;
 import com.vijay.androidutils.Logger;
+import com.vijay.androidutils.NetworkUtils;
 import com.vijay.androidutils.PrefUtils;
 import com.vijay.locationtracker.firebase.Constants;
 import com.vijay.locationtracker.firebase.MessagingService;
 
 
-public class SendGeoDataService extends Service implements ValueEventListener {
+public class SendGeoDataService extends WakefulIntentService {
     private final String COUNTER = "counter";
 
     LocationManager locationManager;
     DatabaseReference trackingStatus;
     private static final String TAG = SendGeoDataService.class.getSimpleName();
 
-    @Nullable
-    @Override
-    public IBinder onBind(Intent intent) {
-        Logger.d(TAG, "onBind called");
-        return null;
+    public SendGeoDataService() {
+        super("SendLocation service");
     }
 
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        Logger.d(TAG, "onStartCommand called");
-        checkTrackingStatus();
-        return super.onStartCommand(intent, flags, startId);
-    }
+    protected void onHandleIntent(Intent intent) {
+        if (NetworkUtils.isNetworkAvailable(this)) {
+            trackingStatus = FirebaseDatabase.getInstance().getReference(Constants.TRACKING_STATUS);
+            trackingStatus.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    Boolean status = dataSnapshot.getValue(Boolean.class);
+                    Logger.d(TAG, "onDataChange called : tracking = " + status);
+                    if (status != null && status) {
+                        sendCoordinates();
+                    } else {
+                        MessagingService.disableTracking(SendGeoDataService.this);
+                        releaseWakeLock();
+                    }
+                }
 
-    private void checkTrackingStatus() {
-        trackingStatus = FirebaseDatabase.getInstance().getReference(Constants.TRACKING_STATUS);
-        trackingStatus.addValueEventListener(this);
-        Logger.d(TAG, "trackingStatus listener registered");
-    }
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
 
-    @Override
-    public void onDataChange(DataSnapshot dataSnapshot) {
-        Boolean status = dataSnapshot.getValue(Boolean.class);
-        Logger.d(TAG, "onDataChange called : tracking = " + status);
-        if (status != null && status) {
-            sendCoordinates();
+                }
+            });
         } else {
-            MessagingService.disableTracking(SendGeoDataService.this);
-            stopSelf();
+            releaseWakeLock();
         }
-    }
-
-    @Override
-    public void onCancelled(DatabaseError databaseError) {
-
-    }
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        Logger.d(TAG, "onCreate called");
+        MessagingService.scheduleAlarm(this);
     }
 
     private void sendCoordinates() {
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
             // here to request the missing permissions, and then overriding
@@ -92,6 +76,7 @@ public class SendGeoDataService extends Service implements ValueEventListener {
             //                                          int[] grantResults)
             // to handle the case where the user grants the permission. See the documentation
             // for ActivityCompat#requestPermissions for more details.
+            releaseWakeLock();
             return;
         }
 
@@ -110,17 +95,13 @@ public class SendGeoDataService extends Service implements ValueEventListener {
                         if (task.isSuccessful() && task.getResult() != null) {
                             Location mLastLocation = task.getResult();
                             sendData(mLastLocation);
+                        } else {
+                            releaseWakeLock();
                         }
                     }
                 });
 
 
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        Log.d(TAG, "Service stopped");
     }
 
     private void sendData(Location location) {
@@ -143,6 +124,7 @@ public class SendGeoDataService extends Service implements ValueEventListener {
                 @Override
                 public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
                     Logger.d(TAG, "Location updated.");
+                    releaseWakeLock();
                 }
             });
             if (value >= Constants.MAX_COUNT) {
@@ -152,6 +134,7 @@ public class SendGeoDataService extends Service implements ValueEventListener {
             PrefUtils.setPrefValueInt(this, COUNTER, value + 1);
 
         } else {
+            releaseWakeLock();
             Logger.d(TAG, "Location null");
         }
     }

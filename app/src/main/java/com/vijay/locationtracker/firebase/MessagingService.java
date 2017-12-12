@@ -8,6 +8,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
+import android.os.Build;
+import android.os.SystemClock;
 import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
@@ -16,15 +18,14 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
-
-import java.util.Map;
-
 import com.vijay.androidutils.Logger;
 import com.vijay.androidutils.PrefUtils;
 import com.vijay.androidutils.ToastUtils;
+import com.vijay.locationtracker.AlarmReceiver;
 import com.vijay.locationtracker.MainActivity;
 import com.vijay.locationtracker.R;
-import com.vijay.locationtracker.SendGeoDataService;
+
+import java.util.Map;
 
 /**
  * Created by vijay-3593 on 18/11/17.
@@ -78,13 +79,13 @@ public class MessagingService extends FirebaseMessagingService {
             if (timeInterval != null) {
                 Logger.d(TAG, "Updating interval time : " + timeInterval);
                 PrefUtils.setPrefValueLong(this, ALARM_INTERVAL_KEY, timeInterval);
-                enableTracking(this, true);
+                enableTracking(this);
             }
         }
         if (trackingStatus != null) {
             boolean status = Boolean.parseBoolean(trackingStatus);
             if (status) {
-                enableTracking(this, false);
+                enableTracking(this);
             } else {
                 disableTracking(this);
             }
@@ -92,7 +93,7 @@ public class MessagingService extends FirebaseMessagingService {
 
     }
 
-    public static void enableTracking(Context context, boolean forceEnable) {
+    public static void enableTracking(Context context) {
         // if (forceEnable || !isTrackingEnabled(this)) {
         //Start Service
         LocationManager locationManager = (LocationManager) context.getSystemService(LOCATION_SERVICE);
@@ -170,14 +171,18 @@ public class MessagingService extends FirebaseMessagingService {
         return true;
     }
 
-    private static void scheduleAlarm(Context context) {
+    public static void scheduleAlarm(Context context) {
         long interval = PrefUtils.getPrefValueLong(context, ALARM_INTERVAL_KEY);
         if (interval == -1) {
             interval = DEFAULT_INTERVAL;
         }
 
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(ALARM_SERVICE);
-        alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP, DEFAULT_START_INTERVAL, interval, getAlarmPendingIntent(context));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            alarmManager.setAndAllowWhileIdle(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + interval, getAlarmPendingIntent(context));
+        } else {
+            alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + interval, getAlarmPendingIntent(context));
+        }
 
         FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
         DatabaseReference intervalTime = firebaseDatabase.getReference(Constants.TIME_INTERVAL);
@@ -193,12 +198,12 @@ public class MessagingService extends FirebaseMessagingService {
     }
 
     private static Intent getAlarmIntent(Context context) {
-        return new Intent(context, SendGeoDataService.class);
+        return new Intent(context, AlarmReceiver.class);
     }
 
     private static PendingIntent getAlarmPendingIntent(Context context) {
         Intent serviceIntent = getAlarmIntent(context);
-        return PendingIntent.getService(context, PENDING_INTENT_CODE, serviceIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        return PendingIntent.getBroadcast(context, PENDING_INTENT_CODE, serviceIntent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
     public static boolean isTrackingEnabled(Context context) {
