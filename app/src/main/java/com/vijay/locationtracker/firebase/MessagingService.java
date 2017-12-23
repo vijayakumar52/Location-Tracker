@@ -20,7 +20,6 @@ import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 import com.vijay.androidutils.Logger;
 import com.vijay.androidutils.PrefUtils;
-import com.vijay.androidutils.ToastUtils;
 import com.vijay.locationtracker.AlarmReceiver;
 import com.vijay.locationtracker.MainActivity;
 import com.vijay.locationtracker.R;
@@ -193,7 +192,6 @@ public class MessagingService extends FirebaseMessagingService {
         DatabaseReference trackingStatus = firebaseDatabase.getReference(Constants.TRACKING_STATUS);
         trackingStatus.setValue(true);
 
-        ToastUtils.makeToastLong(context, context.getResources().getString(R.string.toast_alarm_set_for_interval) + interval);
         Log.d(TAG, "Tracking Enabled");
     }
 

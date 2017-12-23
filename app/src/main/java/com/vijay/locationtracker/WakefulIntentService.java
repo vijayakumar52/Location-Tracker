@@ -62,11 +62,6 @@ public class WakefulIntentService extends IntentService {
         getLock(this).release();
     }
 
-    public void releaseWakeLock() {
-        lockLocal.release();
-        Logger.d(TAG, "Wakelock released");
-    }
-
     public void acquireWakeLock() {
         lockLocal.acquire();
         Logger.d(TAG, "Wakelock acquired");
@@ -74,7 +69,11 @@ public class WakefulIntentService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        releaseWakeLock();
+
     }
 
+    public void releaseWakeLock() {
+        lockLocal.release();
+        Logger.d(TAG, "Wakelock released");
+    }
 }

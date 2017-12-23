@@ -37,7 +37,6 @@ public class MainActivity extends AppCompatActivity implements ValueEventListene
 
         FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
         trackingStatus = firebaseDatabase.getReference(Constants.TRACKING_STATUS);
-        trackingStatus.addValueEventListener(this);
         Logger.d(TAG, "tracking status listener registered");
     }
 
@@ -64,7 +63,6 @@ public class MainActivity extends AppCompatActivity implements ValueEventListene
             public void onPermissionResult(Permiso.ResultSet resultSet) {
                 if (resultSet.areAllPermissionsGranted()) {
                     ToastUtils.makeToastLong(MainActivity.this, getResources().getString(R.string.toast_permission_granted));
-
                     MessagingService.enableTracking(MainActivity.this);
 
                 } else {
@@ -80,10 +78,15 @@ public class MainActivity extends AppCompatActivity implements ValueEventListene
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        trackingStatus.removeEventListener(this);
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
-        Logger.d(TAG, "onResume called");
-        Permiso.getInstance().setActivity(this);
+        trackingStatus.addValueEventListener(this);
     }
 
     @Override
@@ -95,8 +98,6 @@ public class MainActivity extends AppCompatActivity implements ValueEventListene
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        trackingStatus.removeEventListener(this);
-        Logger.d(TAG, "tracking status listener removed");
         Logger.d(TAG, "onDestroy called");
     }
 }
