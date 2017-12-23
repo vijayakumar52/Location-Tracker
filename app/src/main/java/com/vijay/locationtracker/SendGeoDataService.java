@@ -33,6 +33,7 @@ public class SendGeoDataService extends WakefulIntentService {
     FusedLocationProviderClient mFusedLocationProvider;
     LocationCallback mLocationCallback;
 
+    private static final long DEFAULT_DURATION = 60 * 1000;
     private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 10000;
 
     private static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS =
@@ -57,7 +58,30 @@ public class SendGeoDataService extends WakefulIntentService {
                     Boolean status = dataSnapshot.getValue(Boolean.class);
                     Logger.d(TAG, "onDataChange called : tracking = " + status);
                     if (status != null && status) {
-                        startLocationUpdates();
+                        DatabaseReference metaInfo = FirebaseDatabase.getInstance().getReference(Constants.TRACKING_INFO);
+                        metaInfo.addValueEventListener(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                Iterable<DataSnapshot> interval = dataSnapshot.getChildren();
+                                for (DataSnapshot item : interval) {
+                                    String key = item.getKey();
+                                    String value = item.getValue(String.class);
+                                    if (Constants.ALARM_INTERVAL.equals(key)) {
+                                        Long alarmInterval = Long.parseLong(value);
+                                        PrefUtils.setPrefValueLong(SendGeoDataService.this, MessagingService.PREF_ALARM_INTERVAL, alarmInterval);
+                                    } else if (Constants.DURATION.equals(key)) {
+                                        Long duration = Long.parseLong(value);
+                                        PrefUtils.setPrefValueLong(SendGeoDataService.this, MessagingService.PREF_DURATION, duration);
+                                    }
+                                }
+                                startLocationUpdates();
+                            }
+
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
+
+                            }
+                        });
                     } else {
                         MessagingService.disableTracking(SendGeoDataService.this);
                         SendGeoDataService.super.onHandleIntent(currentIntent);
@@ -112,12 +136,18 @@ public class SendGeoDataService extends WakefulIntentService {
 
         mFusedLocationProvider = LocationServices.getFusedLocationProviderClient(this);
         mFusedLocationProvider.requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.myLooper());
+
+        Long duration = PrefUtils.getPrefValueLong(this, MessagingService.PREF_DURATION);
+        if (duration != -1) {
+            duration = DEFAULT_DURATION;
+        }
+
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
                 stopLocationUpdates();
             }
-        }, 60000);
+        }, duration);
     }
 
     private void sendData(Location location) {
@@ -133,7 +163,7 @@ public class SendGeoDataService extends WakefulIntentService {
                 value = 0;
             }
 
-            DatabaseReference coordinates = FirebaseDatabase.getInstance().getReference(Constants.HISTORY);
+            DatabaseReference coordinates = FirebaseDatabase.getInstance().getReference(Constants.LOCATIONS);
             coordinates = coordinates.child(value + Constants.COORDINATE);
 
             LocationData data = new LocationData(curLatitude, curLongitude, time);

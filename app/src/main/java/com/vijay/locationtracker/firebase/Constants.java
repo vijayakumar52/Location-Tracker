@@ -5,15 +5,19 @@ package com.vijay.locationtracker.firebase;
  */
 
 public class Constants {
-    public static final String TRACKING_STATUS = "status";
-
-    public static final String HISTORY = "history";
-    public static final String COORDINATE = "_coordinate";
+    public static final String TRACKING_STATUS = "tracking";
+    public static final String TRACKING_INFO = "trackingInfo";
+    public static final String LOCATIONS = "locations";
     public static final String DEVICE_TOKEN = "deviceToken";
-    public static final String TIME_INTERVAL = "timeInterval";
 
-    public static final String NOTIFICATION_SET_TRACKING = "tracking";
-    public static final String NOTIFICATION_SET_INTERVAL = "interval";
+    public static final String COORDINATE = "_coordinate";
+
+    public static final String ALARM_INTERVAL = "alarmInterval";
+    public static final String DURATION = "duration";
+
+    public static final String NOTIFICATION_TRACKING_STATUS = "tracking";
+    public static final String NOTIFICATION_ALARM_INTERVAL = "interval";
+    public static final String NOTIFICATION_DURATION = "duration";
 
     public static final long MAX_COUNT = 999;
 }

@@ -33,9 +33,10 @@ import java.util.Map;
 public class MessagingService extends FirebaseMessagingService {
     private final static String TAG = MessagingService.class.getSimpleName();
     public static final int PENDING_INTENT_CODE = 5257;
-    public static final String ALARM_KEY = "alarmSet";
-    public static final String ALARM_INTERVAL_KEY = "alarmInterval";
-    public static final long DEFAULT_INTERVAL = 60 * 1000;
+    public static final String PREF_ALARM_STATUS = "alarmStatus";
+    public static final String PREF_ALARM_INTERVAL = "alarmInterval";
+    public static final String PREF_DURATION = "duration";
+    public static final long DEFAULT_ALARM_INTERVAL = 60 * 1000;
 
     public static String[] permissions = {android.Manifest.permission.INTERNET,
             android.Manifest.permission.ACCESS_COARSE_LOCATION,
@@ -60,10 +61,11 @@ public class MessagingService extends FirebaseMessagingService {
     }
 
     private void handleNow(Map<String, String> message) {
-        String trackingStatus = message.get(Constants.NOTIFICATION_SET_TRACKING);
-        String alarmInterval = message.get(Constants.NOTIFICATION_SET_INTERVAL);
+        String trackingStatus = message.get(Constants.NOTIFICATION_TRACKING_STATUS);
+        String alarmInterval = message.get(Constants.NOTIFICATION_ALARM_INTERVAL);
+        String duration = message.get(Constants.NOTIFICATION_DURATION);
 
-        Log.d(TAG, "Message Details " + "enableTracking :" + trackingStatus + " Interval : " + alarmInterval);
+        Log.d(TAG, "Message Details " + "enableTracking :" + trackingStatus + " Interval : "+ alarmInterval + " Duration : "+ duration);
 
         if (alarmInterval != null) {
             Long timeInterval = null;
@@ -76,7 +78,24 @@ public class MessagingService extends FirebaseMessagingService {
 
             if (timeInterval != null) {
                 Logger.d(TAG, "Updating interval time : " + timeInterval);
-                PrefUtils.setPrefValueLong(this, ALARM_INTERVAL_KEY, timeInterval);
+                PrefUtils.setPrefValueLong(this, PREF_ALARM_INTERVAL, timeInterval);
+                FirebaseDatabase.getInstance().getReference(Constants.TRACKING_INFO).child(Constants.ALARM_INTERVAL).setValue(timeInterval);
+            }
+        }
+
+        if (duration != null) {
+            Long updatesDuration = null;
+            try {
+                updatesDuration = Long.parseLong(duration);
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+                Logger.d(TAG, "Duration not valid");
+            }
+
+            if (updatesDuration != null) {
+                Logger.d(TAG, "Update duration : " + updatesDuration);
+                PrefUtils.setPrefValueLong(this, PREF_DURATION, updatesDuration);
+                FirebaseDatabase.getInstance().getReference(Constants.TRACKING_INFO).child(Constants.DURATION).setValue(updatesDuration);
                 scheduleAlarm(this);
             }
         }
@@ -84,8 +103,10 @@ public class MessagingService extends FirebaseMessagingService {
             boolean status = Boolean.parseBoolean(trackingStatus);
             if (status) {
                 enableTracking(this);
+                FirebaseDatabase.getInstance().getReference(Constants.TRACKING_STATUS).setValue(true);
             } else {
                 disableTracking(this);
+                FirebaseDatabase.getInstance().getReference(Constants.TRACKING_STATUS).setValue(false);
             }
         }
 
@@ -118,6 +139,16 @@ public class MessagingService extends FirebaseMessagingService {
         }*/
     }
 
+    public static boolean hasPermission(Context context) {
+        if (permissions.length > 0) {
+            for (int i = 0; i < permissions.length; i++) {
+                if (ActivityCompat.checkSelfPermission(context, permissions[i]) != PackageManager.PERMISSION_GRANTED) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
 
     private static void throwNotification(Context context) {
         Intent intent = new Intent(context, MainActivity.class);
@@ -139,72 +170,40 @@ public class MessagingService extends FirebaseMessagingService {
         Logger.d(TAG, "Notification shown regarding permission");
     }
 
+    public static void scheduleAlarm(Context context) {
+        long interval = PrefUtils.getPrefValueLong(context, PREF_ALARM_INTERVAL);
+        if (interval == -1) {
+            interval = DEFAULT_ALARM_INTERVAL;
+        }
+
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(ALARM_SERVICE);
+        PendingIntent pendingIntent = getAlarmPendingIntent(context);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            alarmManager.setAndAllowWhileIdle(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + interval, pendingIntent);
+        } else {
+            alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + interval, pendingIntent);
+        }
+
+        PrefUtils.setPrefValueBoolean(context, PREF_ALARM_STATUS, true);
+
+        Log.d(TAG, "Tracking Enabled");
+    }
+
     public static void disableTracking(Context context) {
         //if (isTrackingEnabled(context)) {
 
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(ALARM_SERVICE);
         alarmManager.cancel(getAlarmPendingIntent(context));
 
-        PrefUtils.setPrefValueBoolean(context, ALARM_KEY, false);
-
-        //Set DB value in cloud
-        FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
-        DatabaseReference trackingStatus = firebaseDatabase.getReference(Constants.TRACKING_STATUS);
-        trackingStatus.setValue(false);
+        PrefUtils.setPrefValueBoolean(context, PREF_ALARM_STATUS, false);
 
         Log.d(TAG, "Tracking disabled");
-        /*} else {
-            ToastUtils.showToast(context, context.getResources().getString(R.string.toast_service_already_disabled));
-        }*/
     }
 
-    public static boolean hasPermission(Context context) {
-        if (permissions.length > 0) {
-            for (int i = 0; i < permissions.length; i++) {
-                if (ActivityCompat.checkSelfPermission(context, permissions[i]) != PackageManager.PERMISSION_GRANTED) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    public static void scheduleAlarm(Context context) {
-        long interval = PrefUtils.getPrefValueLong(context, ALARM_INTERVAL_KEY);
-        if (interval == -1) {
-            interval = DEFAULT_INTERVAL;
-        }
-
-        AlarmManager alarmManager = (AlarmManager) context.getSystemService(ALARM_SERVICE);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            alarmManager.setAndAllowWhileIdle(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + interval, getAlarmPendingIntent(context));
-        } else {
-            alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + interval, getAlarmPendingIntent(context));
-        }
-
-        FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
-        DatabaseReference intervalTime = firebaseDatabase.getReference(Constants.TIME_INTERVAL);
-        intervalTime.setValue(interval);
-
-        PrefUtils.setPrefValueBoolean(context, ALARM_KEY, true);
-
-        DatabaseReference trackingStatus = firebaseDatabase.getReference(Constants.TRACKING_STATUS);
-        trackingStatus.setValue(true);
-
-        Log.d(TAG, "Tracking Enabled");
-    }
-
-    private static Intent getAlarmIntent(Context context) {
-        return new Intent(context, AlarmReceiver.class);
-    }
 
     private static PendingIntent getAlarmPendingIntent(Context context) {
-        Intent serviceIntent = getAlarmIntent(context);
+        Intent serviceIntent = new Intent(context, AlarmReceiver.class);
         return PendingIntent.getBroadcast(context, PENDING_INTENT_CODE, serviceIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-    }
-
-    public static boolean isTrackingEnabled(Context context) {
-        return PrefUtils.getPrefValueBoolean(context, ALARM_KEY);
     }
 
 }
