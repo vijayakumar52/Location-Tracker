@@ -11,40 +11,17 @@ import com.vijay.androidutils.Logger;
  * Created by vijay-3593 on 18/11/17.
  */
 public class WakefulIntentService extends IntentService {
-    private static final String TAG = WakefulIntentService.class.getSimpleName();
-    public static final String
-            LOCK_NAME_STATIC = "com.vijay.locaiontracker.Static";
-    ;
     public static final String
             LOCK_NAME_LOCAL = "com.vijay.locaiontracker.Local";
-    private static PowerManager.WakeLock lockStatic = null;
     private PowerManager.WakeLock lockLocal = null;
+
+
+    private static final String TAG = WakefulIntentService.class.getSimpleName();
 
     public WakefulIntentService(String name) {
         super(name);
     }
 
-
-    /**
-     * Acquire a partial static WakeLock, you need too call this within the class
-     * that calls startService()
-     *
-     * @param context
-     */
-    public static void acquireStaticLock(Context context) {
-        getLock(context).acquire();
-    }
-
-    synchronized private static PowerManager.WakeLock getLock(Context context) {
-        if (lockStatic == null) {
-            PowerManager
-                    mgr = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
-            lockStatic = mgr.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
-                    LOCK_NAME_STATIC);
-            lockStatic.setReferenceCounted(true);
-        }
-        return (lockStatic);
-    }
 
     @Override
     public void onCreate() {
@@ -59,17 +36,17 @@ public class WakefulIntentService extends IntentService {
     public void onStart(Intent intent, final int startId) {
         acquireWakeLock();
         super.onStart(intent, startId);
-        getLock(this).release();
+        AlarmReceiver.releaseStaticLock(this);
     }
 
     public void acquireWakeLock() {
-        lockLocal.acquire();
+        lockLocal.acquire(10*60*1000L /*10 minutes*/);
         Logger.d(TAG, "Wakelock acquired");
     }
 
     @Override
     protected void onHandleIntent(Intent intent) {
-
+        releaseWakeLock();
     }
 
     public void releaseWakeLock() {

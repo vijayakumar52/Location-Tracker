@@ -36,7 +36,6 @@ public class MessagingService extends FirebaseMessagingService {
     public static final String ALARM_KEY = "alarmSet";
     public static final String ALARM_INTERVAL_KEY = "alarmInterval";
     public static final long DEFAULT_INTERVAL = 60 * 1000;
-    public static final long DEFAULT_START_INTERVAL = 60 * 1000;
 
     public static String[] permissions = {android.Manifest.permission.INTERNET,
             android.Manifest.permission.ACCESS_COARSE_LOCATION,
@@ -78,7 +77,7 @@ public class MessagingService extends FirebaseMessagingService {
             if (timeInterval != null) {
                 Logger.d(TAG, "Updating interval time : " + timeInterval);
                 PrefUtils.setPrefValueLong(this, ALARM_INTERVAL_KEY, timeInterval);
-                enableTracking(this);
+                scheduleAlarm(this);
             }
         }
         if (trackingStatus != null) {

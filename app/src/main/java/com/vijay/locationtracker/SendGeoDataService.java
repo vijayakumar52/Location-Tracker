@@ -28,6 +28,7 @@ import com.vijay.locationtracker.firebase.MessagingService;
 
 public class SendGeoDataService extends WakefulIntentService {
 
+    Intent currentIntent;
     DatabaseReference trackingStatus;
     FusedLocationProviderClient mFusedLocationProvider;
     LocationCallback mLocationCallback;
@@ -47,6 +48,7 @@ public class SendGeoDataService extends WakefulIntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
         Logger.d(TAG, "onHandleIntent called");
+        currentIntent = intent;
         if (NetworkUtils.isNetworkAvailable(this)) {
             trackingStatus = FirebaseDatabase.getInstance().getReference(Constants.TRACKING_STATUS);
             trackingStatus.addValueEventListener(new ValueEventListener() {
@@ -58,7 +60,7 @@ public class SendGeoDataService extends WakefulIntentService {
                         startLocationUpdates();
                     } else {
                         MessagingService.disableTracking(SendGeoDataService.this);
-                        releaseWakeLock();
+                        SendGeoDataService.super.onHandleIntent(currentIntent);
                     }
                 }
 
@@ -68,7 +70,7 @@ public class SendGeoDataService extends WakefulIntentService {
                 }
             });
         } else {
-            releaseWakeLock();
+            SendGeoDataService.super.onHandleIntent(currentIntent);
         }
         MessagingService.scheduleAlarm(this);
     }
@@ -84,7 +86,7 @@ public class SendGeoDataService extends WakefulIntentService {
             //                                          int[] grantResults)
             // to handle the case where the user grants the permission. See the documentation
             // for ActivityCompat#requestPermissions for more details.
-            releaseWakeLock();
+            SendGeoDataService.super.onHandleIntent(currentIntent);
             return;
         }
 
@@ -159,7 +161,7 @@ public class SendGeoDataService extends WakefulIntentService {
             mFusedLocationProvider.removeLocationUpdates(mLocationCallback);
         }
         mFusedLocationProvider = null;
-        releaseWakeLock();
+        SendGeoDataService.super.onHandleIntent(currentIntent);
     }
 
     @Override
