@@ -72,6 +72,7 @@ public class SendGeoDataService extends WakefulIntentService {
         } else {
             SendGeoDataService.super.onHandleIntent(currentIntent);
         }
+        //Schedule alarm again
         MessagingService.scheduleAlarm(this);
     }
 
@@ -116,7 +117,7 @@ public class SendGeoDataService extends WakefulIntentService {
             public void run() {
                 stopLocationUpdates();
             }
-        },60000);
+        }, 60000);
     }
 
     private void sendData(Location location) {
