@@ -27,11 +27,14 @@ public class AlarmReceiver extends BroadcastReceiver {
      * @param context
      */
     public static void acquireStaticLock(Context context) {
-        getLock(context).acquire(10*60*1000L /*10 minutes*/);
+        getLock(context).acquire(10 * 60 * 1000L /*10 minutes*/);
     }
 
-    public static void releaseStaticLock(Context context){
-        getLock(context).release();
+    public static void releaseStaticLock(Context context) {
+        PowerManager.WakeLock wakeLock = getLock(context);
+        if (wakeLock.isHeld()) {
+            wakeLock.release();
+        }
     }
 
     synchronized private static PowerManager.WakeLock getLock(Context context) {
