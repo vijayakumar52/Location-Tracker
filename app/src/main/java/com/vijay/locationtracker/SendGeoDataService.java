@@ -65,12 +65,12 @@ public class SendGeoDataService extends WakefulIntentService {
                                 Iterable<DataSnapshot> interval = dataSnapshot.getChildren();
                                 for (DataSnapshot item : interval) {
                                     String key = item.getKey();
-                                    String value = item.getValue(String.class);
+                                    Object value = item.getValue();
                                     if (Constants.ALARM_INTERVAL.equals(key)) {
-                                        Long alarmInterval = Long.parseLong(value);
+                                        Long alarmInterval = (Long) value;
                                         PrefUtils.setPrefValueLong(SendGeoDataService.this, MessagingService.PREF_ALARM_INTERVAL, alarmInterval);
                                     } else if (Constants.DURATION.equals(key)) {
-                                        Long duration = Long.parseLong(value);
+                                        Long duration = (Long) value;
                                         PrefUtils.setPrefValueLong(SendGeoDataService.this, MessagingService.PREF_DURATION, duration);
                                     }
                                 }
