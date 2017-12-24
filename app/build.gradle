@@ -21,21 +21,19 @@ android {
 }
 
 dependencies {
-    compile 'com.google.firebase:firebase-database:11.6.0'
-    compile 'com.google.firebase:firebase-messaging:11.6.0'
     compile fileTree(dir: 'libs', include: ['*.jar'])
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-    compile getRootProject().ext.supportLib.design
     testCompile 'junit:junit:4.12'
-    compile 'com.android.support.constraint:constraint-layout:1.0.2'
+    compile getRootProject().ext.supportLib.design
     compile getRootProject().ext.extLib.permisso
     compile getRootProject().ext.extLib.okhttp
     compile getRootProject().ext.extLib.materialDialog
+    compile getRootProject().ext.firebaseLib.database
+    compile getRootProject().ext.firebaseLib.messaging
+    compile getRootProject().ext.playServicesLib.location
     compile project(':Android-Utils')
-    compile 'com.google.android.gms:play-services-location:11.6.0'
-
 }
 
 

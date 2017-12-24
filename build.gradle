@@ -19,7 +19,6 @@ buildscript {
         smoothProgressBarVer = "1.1.0"
         tokenAutoCompleteVer = "2.0.8@aar"
         textDrawableVer = "1.0.1"
-        firebaseMessagingVer = "10.2.6"
         butterKnifeVer = "8.5.1"
         browniesCollectionsVer = "0.9.12"
         materialDialogVer = "0.9.4.5"
@@ -33,6 +32,10 @@ buildscript {
         picassoDownloaderVer = "1.1.0"
         architectureComponentVer = "1.0.0"
 
+        fireabaseDatabaseVer = "11.8.0"
+        fireabaseMessagingVer = "11.8.0"
+        playServicesVer = "11.8.0"
+
 
         compileSdkVersion = 26
         minSdkVersion = 16
@@ -43,6 +46,7 @@ buildscript {
                 appcompat : "com.android.support:appcompat-v7:${supportLibVer}",
                 design    : "com.android.support:design:${supportLibVer}",
                 annotation: "com.android.support:support-annotations:${supportLibVer}"
+
         ]
 
         architechLib = [
@@ -51,11 +55,19 @@ buildscript {
                 lifecycleCompiler : "android.arch.lifecycle:compiler:${architectureComponentVer}"
         ]
 
+        firebaseLib = [
+                database : "com.google.firebase:firebase-database:${fireabaseDatabaseVer}",
+                messaging : "com.google.firebase:firebase-messaging:${fireabaseMessagingVer}"
+        ]
+        playServicesLib = [
+                location : "com.google.android.gms:play-services-location:${playServicesVer}"
+        ]
+
+
         extLib = [
                 smoothProgressBar  : "com.github.castorflex.smoothprogressbar:library:${smoothProgressBarVer}",
                 tokenAutoComplete  : "com.splitwise:tokenautocomplete:${tokenAutoCompleteVer}",
                 textDrawable       : "com.amulyakhare:com.amulyakhare.textdrawable:${textDrawableVer}",
-                firebaseMessaging  : "com.google.firebase:firebase-messaging:${firebaseMessagingVer}",
                 butterknife        : "com.jakewharton:butterknife:${butterKnifeVer}",
                 butterKnifeCompiler: "com.jakewharton:butterknife-compiler:${butterKnifeVer}",
                 browniesCollections: "org.magicwerk:brownies-collections:${browniesCollectionsVer}",
