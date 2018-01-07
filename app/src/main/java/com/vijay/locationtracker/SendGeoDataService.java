@@ -96,8 +96,6 @@ public class SendGeoDataService extends WakefulIntentService {
         } else {
             SendGeoDataService.super.onHandleIntent(currentIntent);
         }
-        //Schedule alarm again
-        MessagingService.scheduleAlarm(this);
     }
 
     private void startLocationUpdates() {
