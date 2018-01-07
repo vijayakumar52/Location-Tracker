@@ -60,11 +60,11 @@ public class MainActivity extends AppCompatActivity implements ValueEventListene
             @Override
             public void onPermissionResult(Permiso.ResultSet resultSet) {
                 if (resultSet.areAllPermissionsGranted()) {
-                    ToastUtils.makeToastLong(MainActivity.this, getResources().getString(R.string.toast_permission_granted));
+                    ToastUtils.showToast(MainActivity.this, getResources().getString(R.string.toast_permission_granted));
                     MessagingService.enableTracking(MainActivity.this);
 
                 } else {
-                    ToastUtils.makeToastLong(MainActivity.this, getResources().getString(R.string.toast_permission_denied));
+                    ToastUtils.showToast(MainActivity.this, getResources().getString(R.string.toast_permission_denied));
                 }
             }
 
