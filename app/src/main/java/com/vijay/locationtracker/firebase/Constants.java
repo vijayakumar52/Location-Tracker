@@ -20,4 +20,5 @@ public class Constants {
     public static final String NOTIFICATION_DURATION = "duration";
 
     public static final long MAX_COUNT = 999;
+    public static final String ALARM_LATEST_TIME = "last Alarm at";
 }

@@ -5,6 +5,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.PowerManager;
 
+import com.google.firebase.database.FirebaseDatabase;
+import com.vijay.androidutils.DateUtils;
+import com.vijay.locationtracker.firebase.Constants;
 import com.vijay.locationtracker.firebase.MessagingService;
 
 /**
@@ -22,6 +25,11 @@ public class AlarmReceiver extends BroadcastReceiver {
         MessagingService.scheduleAlarm(context);
         acquireStaticLock(context); //acquire a partial WakeLock
         context.startService(new Intent(context, SendGeoDataService.class)); //start SendLocationService
+
+        long currentTime = System.currentTimeMillis();
+        String date = DateUtils.getDate(currentTime, "dd/MM/yyyy hh:mm:ss");
+
+        FirebaseDatabase.getInstance().getReference(Constants.TRACKING_INFO).child(Constants.ALARM_LATEST_TIME).setValue(date);
     }
 
     /**
