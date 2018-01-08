@@ -136,7 +136,7 @@ public class SendGeoDataService extends WakefulIntentService {
         mFusedLocationProvider.requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.myLooper());
 
         Long duration = PrefUtils.getPrefValueLong(this, MessagingService.PREF_DURATION);
-        if (duration != -1) {
+        if (duration == -1) {
             duration = DEFAULT_DURATION;
         }
 

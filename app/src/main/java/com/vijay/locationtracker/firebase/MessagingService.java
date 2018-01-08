@@ -65,7 +65,7 @@ public class MessagingService extends FirebaseMessagingService {
         String alarmInterval = message.get(Constants.NOTIFICATION_ALARM_INTERVAL);
         String duration = message.get(Constants.NOTIFICATION_DURATION);
 
-        Log.d(TAG, "Message Details " + "enableTracking :" + trackingStatus + " Interval : "+ alarmInterval + " Duration : "+ duration);
+        Log.d(TAG, "Message Details " + "enableTracking :" + trackingStatus + " Interval : " + alarmInterval + " Duration : " + duration);
 
         if (alarmInterval != null) {
             Long timeInterval = null;
@@ -178,8 +178,14 @@ public class MessagingService extends FirebaseMessagingService {
 
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(ALARM_SERVICE);
         PendingIntent pendingIntent = getAlarmPendingIntent(context);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            alarmManager.setAndAllowWhileIdle(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + interval, pendingIntent);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+           /* if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                alarmManager.setExactAndAllowWhileIdle(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + interval, pendingIntent);
+            } else {
+                alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + interval, pendingIntent);
+            }*/
+            AlarmManager.AlarmClockInfo ac = new AlarmManager.AlarmClockInfo(System.currentTimeMillis() + interval, null);
+            alarmManager.setAlarmClock(ac, pendingIntent);
         } else {
             alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + interval, pendingIntent);
         }
@@ -203,6 +209,9 @@ public class MessagingService extends FirebaseMessagingService {
 
     private static PendingIntent getAlarmPendingIntent(Context context) {
         Intent serviceIntent = new Intent(context, AlarmReceiver.class);
+        if (android.os.Build.VERSION.SDK_INT >= 16) {
+            serviceIntent.addFlags(Intent.FLAG_RECEIVER_FOREGROUND);
+        }
         return PendingIntent.getBroadcast(context, PENDING_INTENT_CODE, serviceIntent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
