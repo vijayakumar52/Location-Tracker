@@ -1,7 +1,14 @@
 package com.vijay.locationtracker;
 
+import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.PowerManager;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.ImageView;
 
@@ -16,7 +23,7 @@ import com.vijay.androidutils.ToastUtils;
 import com.vijay.locationtracker.firebase.Constants;
 import com.vijay.locationtracker.firebase.MessagingService;
 
-public class MainActivity extends AppCompatActivity implements ValueEventListener{
+public class MainActivity extends AppCompatActivity implements ValueEventListener {
     private static final String TAG = MainActivity.class.getSimpleName();
     public static final String REQUEST_PERMISSION = "requestPermission";
     DatabaseReference trackingStatus;
@@ -41,7 +48,7 @@ public class MainActivity extends AppCompatActivity implements ValueEventListene
     @Override
     public void onDataChange(DataSnapshot dataSnapshot) {
         Boolean value = dataSnapshot.getValue(Boolean.class);
-        Logger.d(TAG, "onDataChange called : tracking = "+ value);
+        Logger.d(TAG, "onDataChange called : tracking = " + value);
         ImageView status = findViewById(R.id.service_status);
         if (value != null && value) {
             status.setImageResource(R.drawable.active);
@@ -61,6 +68,9 @@ public class MainActivity extends AppCompatActivity implements ValueEventListene
             public void onPermissionResult(Permiso.ResultSet resultSet) {
                 if (resultSet.areAllPermissionsGranted()) {
                     ToastUtils.showToast(MainActivity.this, getResources().getString(R.string.toast_permission_granted));
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        ignoreBatteryOptimization();
+                    }
                     MessagingService.enableTracking(MainActivity.this);
 
                 } else {
@@ -79,6 +89,20 @@ public class MainActivity extends AppCompatActivity implements ValueEventListene
     protected void onPause() {
         super.onPause();
         trackingStatus.removeEventListener(this);
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    private void ignoreBatteryOptimization() {
+        Intent intent = new Intent();
+        String packageName = getPackageName();
+        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        if (pm.isIgnoringBatteryOptimizations(packageName))
+            intent.setAction(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
+        else {
+            intent.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+            intent.setData(Uri.parse("package:" + packageName));
+        }
+        startActivity(intent);
     }
 
     @Override
